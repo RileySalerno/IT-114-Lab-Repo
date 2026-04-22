@@ -8,7 +8,7 @@ public class RPSserver {
 
     public static void main(String[] args) throws Exception {
         ServerSocket serverSocket = new ServerSocket(8080);
-        System.out.println("Server started...");
+        System.out.println("Server started");
 
         while (true) {
             Socket listener = serverSocket.accept();
@@ -56,5 +56,15 @@ public class RPSserver {
                 System.out.println("Waiting for another Player to join the lobby");
             }
         }
-        
+        private void joinPR() throws Exception {
+            System.out.println("Enter a Room Password to join");
+            String password = incoming.readLine();
+
+            if (privateRoom.containsKey(password)) {
+                Player host = privateRoom.remove(password);
+                new GameSession(host, this).start();
+            } else {
+                System.out.println("Room dosent exist.");
+            }
+        }
 }
