@@ -45,4 +45,16 @@ public class RPSserver {
                 System.out.println("Client disconnected.");
             }
         }
+
+        private void createPR() throws Exception {
+            System.out.println("Enter a Password using only numbers or letters");
+            String roomPassword = incoming.readLine();
+
+            synchronized (privateRoom) {
+                privateRoom.put(roomPassword, this);
+                System.out.println("Private lobby successfully created. Password is: " + roomPassword);
+                System.out.println("Waiting for another Player to join the lobby");
+            }
+        }
+        
 }
