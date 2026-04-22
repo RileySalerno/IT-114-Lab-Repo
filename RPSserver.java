@@ -8,7 +8,7 @@ public class RPSserver {
 
     public static void main(String[] args) throws Exception {
         ServerSocket serverSocket = new ServerSocket(8080);
-        System.out.println("Server has started");
+        System.out.println("Server started...");
 
         while (true) {
             Socket listener = serverSocket.accept();
@@ -30,7 +30,7 @@ public class RPSserver {
 
          public void run() {
             try {
-                outgoing.println("Enter 1 for Public Match, 2 to Create Private Room, 3 to Join Private Room:");
+                send("Enter 1 for Public Match, 2 to Create Private Room, 3 to Join Private Room:");
                 int roomType = Integer.parseInt(incoming.readLine());
 
                 if (roomType == 1) {
@@ -46,6 +46,10 @@ public class RPSserver {
             }
         }
 
+        public void send(String msg){
+            outgoing.println(msg);
+        }
+
         private void publicMatch() throws Exception{
             synchronized(queue) {
                 queue.add(this);
@@ -56,41 +60,38 @@ public class RPSserver {
 
                     new GameSession(p1, p2).gameStart();
                 } else {
-                    System.out.println("Waiting for another player to join");
+                    send("Waiting for another player to join");
                 }
             }
         }
         private void createPR() throws Exception {
-            System.out.println("Enter a Password using only numbers or letters");
+            outgoing.println("Enter a Password using only numbers or letters");
             String roomPassword = incoming.readLine();
 
             synchronized (privateRoom) {
                 privateRoom.put(roomPassword, this);
-                System.out.println("Private lobby successfully created. Password is: " + roomPassword);
-                System.out.println("Waiting for another Player to join the lobby");
+                send("Private lobby successfully created. Password is: " + roomPassword);
+                send("Waiting for another Player to join the lobby");
             }
         }
 
         private void joinPR() throws Exception {
-            System.out.println("Enter a Room Password to join");
+            send("Enter a Room Password to join");
             String password = incoming.readLine();
 
             if (privateRoom.containsKey(password)) {
                 Player host = privateRoom.remove(password);
                 new GameSession(host, this).gameStart();
             } else {
-                System.out.println("Room dosent exist.");
+                send("Room dosent exist.");
             }
         }
 
         public int getMove() throws Exception{
-            System.out.println("Enter Rock(1), Paper(2), or Scissors(3)");
+            send("Enter Rock(1), Paper(2), or Scissors(3)");
             return Integer.parseInt(incoming.readLine());
         }
 
-        public void send(String msg){
-            System.out.println(msg);
-        }
 
         static class GameSession {
             private Player p1;
