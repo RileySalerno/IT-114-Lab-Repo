@@ -81,6 +81,7 @@ public class RPSserver {
 
             if (privateRoom.containsKey(password)) {
                 Player host = privateRoom.remove(password);
+                send("Youve joined a Private room");
                 new GameSession(host, this).gameStart();
             } else {
                 send("Room dosent exist.");
@@ -103,16 +104,30 @@ public class RPSserver {
             }
 
             public void gameStart() throws Exception {
-                p1.send("Matched with: ");
-                p2.send("Matched with: ");
+                while (true) {
+                    p1.send("Matched with opponent");
+                    p2.send("Matched with opponent");
 
-                int move1 = p1.getMove();
-                int move2 = p2.getMove();
+                    int move1 = p1.getMove();
+                    int move2 = p2.getMove();
 
-                String result = getResult(move1, move2);
+                    String result = getResult(move1, move2);
 
-                p1.send(result);
-                p2.send(result);
+                    p1.send(result);
+                    p2.send(result);
+
+                    p1.send("Play again? (yes/no)");
+                    p2.send("Play again? (yes/no)");
+
+                    String r1 = p1.incoming.readLine();
+                    String r2 = p2.incoming.readLine();
+
+                    if (!r1.equalsIgnoreCase("yes") || !r2.equalsIgnoreCase("yes")) {
+                        p1.send("Game ended.");
+                        p2.send("Game ended.");
+                        break;
+                    }
+                }
             }
 
             private String getResult(int p1, int p2) {
