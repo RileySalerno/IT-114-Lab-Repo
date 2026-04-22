@@ -67,4 +67,19 @@ public class RPSserver {
                 System.out.println("Room dosent exist.");
             }
         }
+
+        private void publicMatch() throws Exception{
+            synchronized(queue) {
+                queue.add(this);
+
+                if (queue.size() >= 2){
+                    Player p1 = queue.remove(0);
+                    Player p2 = queue.remove(0);
+
+                    new GameSession(p1, p2).gameStart();
+                } else {
+                    System.out.println("Waiting for another player to join");
+                }
+            }
+        }
 }
