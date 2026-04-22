@@ -1,9 +1,28 @@
-import java.io.BufferedReader;
-import java.io.PrintWriter;
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
 
 public class RPSclient {
-    Socket Socket;
-    BufferedReader in;
-    PrintWriter out;
-    String Username
+
+    public static void main(String[] args) throws IOException {
+        Socket socket = new Socket("localhost", 5000);
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+        Scanner scan = new Scanner(System.in);
+
+        new Thread(() -> {
+            try {
+                String response;
+                while ((response = in.readLine()) != null) {
+                    System.out.println(response);
+                }
+            } catch (IOException e) {}
+        }).start();
+
+        while (true) {
+            String input = scan.nextLine();
+            out.println(input);
+        }
+    }
 }
