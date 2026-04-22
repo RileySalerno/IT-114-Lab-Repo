@@ -1,19 +1,19 @@
 import java.net.*;
+import java.util.*;
 import java.io.*;
 
 public class RPSserver {
-    public static void main(String[] args) throws Exception{
-        int portNum = 8080;
-        ServerSocket server = new ServerSocket(portNum);
-        try {
-                System.out.println("");
-                Socket clientSocket = server.accept();
-                System.out.println("Player has Connected");
-                BufferedReader in = new BufferedReader( new InputStreamReader(clientSocket.getInputStream()));
-                PrintWriter out = new PrintWriter( clientSocket.getOutputStream(), true);
-            System.out.println("Welcome to RPS Multiplayer");
-        } catch (Exception e) {
-            System.out.println("There was an error in the server: " + e.getMessage());
+    private static List<Player> playerQueue = new ArrayList<>();
+    private static Map<String, Player> privateRoom = new HashMap<>();
+
+    public static void main(String[] args) throws Exception {
+        ServerSocket serverSocket = new ServerSocket(8080);
+        System.out.println("Server started...");
+
+        while (true) {
+            Socket listener = serverSocket.accept();
+            Player player = new Player(listener);
+            new Thread(player).start();
         }
     }
 }
