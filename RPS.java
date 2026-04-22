@@ -1,45 +1,26 @@
-import java.util.Random;
 import java.util.Scanner;
 
-public class RPS {
+public class RPS{
     public static void main(String[] args) {
         Scanner scan = new Scanner(System.in);
-        RPSGame(scan);
-    }
 
-    static void RPSGame(Scanner scan) {
-        System.out.println("Type Rock, Paper, or Scissors:");
-        String userMove = scan.nextLine();
+        System.out.print("Player 1 - Enter (1) for Rock, (2) for Paper, or (3) for Scissors");
+        int p1 = scan.nextInt();
 
-        Random gen = new Random();
-        int compNum = gen.nextInt(3);
+        System.out.print("Player 2 - Enter (1) for Rock, (2) for Paper, or (3) for Scissors");
+        int p2 = scan.nextInt();
 
-        String compMove;
-        if (compNum == 0) {
-            compMove = "Rock";
-        } else if (compNum == 1) {
-            compMove = "Paper";
-        } else {
-            compMove = "Scissors";
+        if (p1 < 1 || p1 > 3 || p2 < 1 || p2 > 3) {
+            System.out.println("Please enter 1, 2, or 3");
+        } else if (p1 == p2) {
+            System.out.println("Tie");
+        } else if ( (p1 == 1 && p2 == 3) || (p1 == 2 && p2 == 1) || (p1 == 3 && p2 == 2)) {
+            System.out.println("Player 1 wins");
+        } 
+        else {
+            System.out.println("Player 2 wins");
         }
-        System.out.println("Computer chose " + compMove + "!");
 
-        if (userMove.equals(compMove)) {
-            System.out.println("It's a draw!");
-        } else if (Winner(userMove, compMove)) {
-            System.out.println("Player wins!");
-        } else {
-            System.out.println("Computer wins!");
-        }
-    }
-
-    static boolean Winner(String userMove, String compMove) {
-        if (userMove.equals("Rock")) {
-            return compMove.equals("Scissors");
-        } else if (userMove.equals("Paper")) {
-            return compMove.equals("Rock");
-        } else {
-            return compMove.equals("Paper");
-        }
+        scan.close();
     }
 }
