@@ -89,7 +89,6 @@ public class RPSserver {
         }
 
         public int getMove() throws Exception{
-            send("Enter Rock(1), Paper(2), or Scissors(3)");
             return Integer.parseInt(incoming.readLine());
         }
 
@@ -108,6 +107,9 @@ public class RPSserver {
                     p1.send("Matched with opponent");
                     p2.send("Matched with opponent");
 
+                    p1.send("Enter Rock(1), Paper(2), or Scissors(3)");
+                    p2.send("Enter Rock(1), Paper(2), or Scissors(3)");
+
                     int move1 = p1.getMove();
                     int move2 = p2.getMove();
 
@@ -122,9 +124,7 @@ public class RPSserver {
                     String r1 = p1.incoming.readLine();
                     String r2 = p2.incoming.readLine();
 
-                    if (!r1.equalsIgnoreCase("yes") || !r2.equalsIgnoreCase("yes")) {
-                        p1.send("Game ended.");
-                        p2.send("Game ended.");
+                    if (r1.equalsIgnoreCase("no") || r2.equalsIgnoreCase("no")) {
                         break;
                     }
                 }
