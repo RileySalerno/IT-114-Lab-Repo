@@ -36,4 +36,27 @@ public class RPSLeaderboard {
         leaderboard.put(username, leaderboard.getOrDefault(username, 0) + 1);
         saveBoard();
     }
+
+    public static synchronized String getBoard(){
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("\n      LEADERBOARD       \n");
+
+          leaderboard.entrySet()
+                .stream()
+                .sorted((a, b) ->
+                        b.getValue() - a.getValue())
+                .limit(5)
+                .forEach(entry ->
+                        sb.append(entry.getKey())
+                                .append(" - ")
+                                .append(entry.getValue())
+                                .append(" wins\n"));
+        return sb.toString();
+    }
+
+    public static void displayLeaderboard() {
+
+        System.out.println(getBoard());
+    }
 }
