@@ -4,12 +4,17 @@ import java.util.Scanner;
 
 public class RPSclient {
 
-    public static void main(String[] args) throws IOException {
-        Socket socket = new Socket("localhost", 5000);
+    public static void main(String[] args) throws Exception {
+        Socket socket = new Socket("localhost", 8080);
 
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
         Scanner scan = new Scanner(System.in);
+
+        System.out.println("Enter a Username: ");
+        String username = scan.nextLine();
+
+        out.println(username);
 
         new Thread(() -> {
             try {
@@ -17,7 +22,7 @@ public class RPSclient {
                 while ((response = in.readLine()) != null) {
                     System.out.println(response);
                 }
-            } catch (IOException e) {}
+            } catch (Exception e) {}
         }).start();
 
         while (true) {
