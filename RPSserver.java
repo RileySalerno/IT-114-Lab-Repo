@@ -5,6 +5,7 @@ import java.io.*;
 public class RPSserver {
     private static List<Player> queue = new ArrayList<>();
     private static Map<String, Player> privateRoom = new HashMap<>();
+    private static List<String> activePlayers = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
         RPSLeaderboard.loadBoard();
@@ -23,19 +24,56 @@ public class RPSserver {
         private PrintWriter outgoing;
         private String name;
 
-        public Player(Socket listener) throws Exception{
+        public Player(Socket listener) throws Exception {
             incoming = new BufferedReader(new InputStreamReader(listener.getInputStream()));
             outgoing = new PrintWriter(listener.getOutputStream(), true);
         }
 
-        public String getName(){
+        public String getName() {
             return name;
         }
 
-         public void run() {
+        public void run() {
             try {
-                System.out.println("Client joined");
-                name = incoming.readLine();
+                System.out.println("Client has joined");
+                while (true) {
+                    send("Enter a Username thats 10 or less characters(letters and numbers only)");
+                    String enteredName = incoming.readLine();
+                    boolean userExists = false;
+                    synchronized (activePlayers) {
+                        if (enteredName.isEmpty()) {
+                            send("Please enter a username!");
+                            continue;
+                        }
+
+                        if (enteredName.length() > 10) {
+                            send("Username must be 10 or less characters");
+                            continue;
+                        }
+
+                        if(!enteredName.matches("[a-zA-Z0-9]")){
+                            send("Username can only have numbers and letters");
+                            continue;
+                        }
+
+                        for(String user : activePlayers){
+                            if(user.equalsIgnoreCase(enteredName)){
+                                userExists = true;
+                                break;
+                            }
+                        }
+
+                        if (userExists) {
+                            send("Username is already being used");
+                            continue;
+                        }
+
+                        name = enteredName;
+                        activePlayers.add(name);
+                        break;
+                    }
+                }
+
                 send(name + " has joined the server");
                 send("Enter 1 for Public Match, 2 to Create Private Room, 3 to Join Private Room:");
                 int roomType = Integer.parseInt(incoming.readLine());
@@ -50,18 +88,24 @@ public class RPSserver {
 
             } catch (Exception e) {
                 System.out.println("Client disconnected.");
+            } finally{
+                if (name != null){
+                    synchronized(activePlayers){
+                        activePlayers.remove(name);
+                    }
+                }
             }
         }
 
-        public void send(String msg){
+        public void send(String msg) {
             outgoing.println(msg);
         }
 
-        private void publicMatch() throws Exception{
-            synchronized(queue) {
+        private void publicMatch() throws Exception {
+            synchronized (queue) {
                 queue.add(this);
 
-                if (queue.size() >= 2){
+                if (queue.size() >= 2) {
                     Player p1 = queue.remove(0);
                     Player p2 = queue.remove(0);
 
@@ -71,6 +115,7 @@ public class RPSserver {
                 }
             }
         }
+
         private void createPR() throws Exception {
             outgoing.println("Enter a Password using only numbers or letters");
             String roomPassword = incoming.readLine();
@@ -95,16 +140,15 @@ public class RPSserver {
             }
         }
 
-        public int getMove() throws Exception{
+        public int getMove() throws Exception {
             return Integer.parseInt(incoming.readLine());
         }
-
 
         static class GameSession {
             private Player p1;
             private Player p2;
 
-            public GameSession(Player p1,Player p2) {
+            public GameSession(Player p1, Player p2) {
                 this.p1 = p1;
                 this.p2 = p2;
             }
@@ -140,13 +184,14 @@ public class RPSserver {
             }
 
             private String getResult(int move1, int move2) {
-                if (move1 == move2) return "Tie";
-            if ((move1 == 1 && move2 == 3) || (move1 == 2 && move2 == 1) || (move1 == 3 && move2 == 2)) {
-                RPSLeaderboard.addWins(p1.getName());
-                return p1.getName() + " wins";
-            }
-            RPSLeaderboard.addWins(p2.getName());
-            return p2.getName() + " wins";
+                if (move1 == move2)
+                    return "Tie";
+                if ((move1 == 1 && move2 == 3) || (move1 == 2 && move2 == 1) || (move1 == 3 && move2 == 2)) {
+                    RPSLeaderboard.addWins(p1.getName());
+                    return p1.getName() + " wins";
+                }
+                RPSLeaderboard.addWins(p2.getName());
+                return p2.getName() + " wins";
             }
         }
     }
