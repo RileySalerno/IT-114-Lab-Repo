@@ -51,7 +51,7 @@ public class RPSserver {
                             continue;
                         }
 
-                        if(!enteredName.matches("[a-zA-Z0-9]")){
+                        if(!enteredName.matches("[a-zA-Z0-9]+")){
                             send("Username can only have numbers and letters");
                             continue;
                         }
