@@ -7,6 +7,7 @@ public class RPSserver {
     private static Map<String, Player> privateRoom = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
+        RPSLeaderboard.loadBoard();
         ServerSocket serverSocket = new ServerSocket(8080);
         System.out.println("Started Server");
 
@@ -140,9 +141,11 @@ public class RPSserver {
 
             private String getResult(int move1, int move2) {
                 if (move1 == move2) return "Tie";
-            if ((move1 == 1 && move2 == 3) || (move1 == 2 && move2 == 1) ||(move1 == 3 && move2 == 2)) {
+            if ((move1 == 1 && move2 == 3) || (move1 == 2 && move2 == 1) || (move1 == 3 && move2 == 2)) {
+                RPSLeaderboard.addWins(p1.getName());
                 return p1.getName() + " wins";
             }
+            RPSLeaderboard.addWins(p2.getName());
             return p2.getName() + " wins";
             }
         }
