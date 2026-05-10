@@ -11,11 +11,6 @@ public class RPSclient {
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
         Scanner scan = new Scanner(System.in);
 
-        System.out.println("Enter a Username: ");
-        String username = scan.nextLine();
-
-        out.println(username);
-
         new Thread(() -> {
             try {
                 String response;
