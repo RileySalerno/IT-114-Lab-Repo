@@ -31,4 +31,9 @@ public class RPSLeaderboard {
             e.printStackTrace();
         }
     }
+
+    public static synchronized void addWins(String username){
+        leaderboard.put(username, leaderboard.getOrDefault(username, 0) + 1);
+        saveBoard();
+    }
 }
