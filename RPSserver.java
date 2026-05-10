@@ -169,6 +169,11 @@ public class RPSserver {
                     p1.send(result);
                     p2.send(result);
 
+                    String board = RPSLeaderboard.getBoard();
+
+                    p1.send(board);
+                    p2.send(board);
+
                     p1.send("Play again? (yes/no)");
                     p2.send("Play again? (yes/no)");
 
