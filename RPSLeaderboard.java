@@ -37,21 +37,32 @@ public class RPSLeaderboard {
         saveBoard();
     }
 
+    private static String getPlace(int placeNum){
+        if (placeNum == 1) return "1st";
+        if (placeNum == 2) return "2nd";
+        if (placeNum == 3) return "3rd";
+
+        return placeNum + "th";
+    }
+
     public static synchronized String getBoard(){
         StringBuilder sb = new StringBuilder();
+        int place = 1;
 
         sb.append("\n      LEADERBOARD       \n");
+        List<Map.Entry<String, Integer>> sorted = new ArrayList<>(leaderboard.entrySet());
+        sorted.sort((a,b) -> b.getValue() - a.getValue());
 
-          leaderboard.entrySet()
-                .stream()
-                .sorted((a, b) ->
-                        b.getValue() - a.getValue())
-                .limit(5)
-                .forEach(entry ->
-                        sb.append(entry.getKey())
-                                .append(" - ")
-                                .append(entry.getValue())
-                                .append(" wins\n"));
+        for (Map.Entry<String, Integer> entry : sorted){
+            String line = 
+                getPlace(place) + " - " +
+                entry.getKey() + " - " +
+                entry.getValue() + " wins";
+            
+            sb.append(line);
+
+            place++;
+        }
         return sb.toString();
     }
 
