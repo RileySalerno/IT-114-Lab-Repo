@@ -259,15 +259,14 @@ public class RPS_GUI {
 
     private JPanel waitingMovePanel() {
 
-        JPanel panel = new JPanel(new BorderLayout());
+        JPanel waitMovepanel = new JPanel(new BorderLayout());
 
         JLabel label = new JLabel("Waiting for opponents move", SwingConstants.CENTER);
+        label.setFont(new Font("Roboto", Font.BOLD, 24));
 
-        label.setFont(new Font("Arial", Font.BOLD, 24));
+        waitMovepanel.add(label, BorderLayout.CENTER);
 
-        panel.add(label, BorderLayout.CENTER);
-
-        return panel;
+        return waitMovepanel;
     }
 
     private JPanel resultPanel() {
@@ -293,11 +292,12 @@ public class RPS_GUI {
 
         yes.addActionListener(e -> {
             out.println("yes");
-            cards.show(mainPanel, "waiting");
+            resultLabel.setText("Waiting for opponent");
         });
 
         no.addActionListener(e -> {
             out.println("no");
+            resultLabel.setText("");
             cards.show(mainPanel, "menu");
         });
 
@@ -348,8 +348,13 @@ public class RPS_GUI {
         }
 
         if (msg.equals("RETURN_TO_LOBBY")) {
-            resultLabel.setText("");
-            cards.show(mainPanel, "menu");
+            SwingUtilities.invokeLater(() ->{ 
+                resultLabel.setText("");
+                cards.show(mainPanel, "menu");
+
+                frame.revalidate();
+                frame.repaint();
+        });
         }
 
         if (msg.contains("Username is already being used")) {
