@@ -223,8 +223,28 @@ public class RPSserver {
                     String r1 = p1.incoming.readLine();
                     String r2 = p2.incoming.readLine();
 
-                    if (r1 == null || r2 == null) break;
-                    if (r1.equals("no") || r2.equals("no")) break;
+                    if (r1 == null || r2 == null){
+                        p1.send("Opponent Disconnected");
+                        p2.send("Opponent Disconnected");
+                        wakePlayer();
+                        break;
+                    }
+                    if (r1.equals("no") || r2.equals("no")){
+                        p1.send("RETURN_TO_LOBBY");
+                        p1.send("RETURN_TO_LOBBY");
+                        wakePlayer();
+
+                    }
+                }
+            }
+
+            private void wakePlayer(){
+                synchronized(p1){
+                    p1.notify();
+                }
+
+                synchronized(p2){
+                    p2.notify();
                 }
             }
         }
