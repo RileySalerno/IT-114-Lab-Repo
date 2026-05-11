@@ -23,7 +23,14 @@ public class RPSserver {
                         if (queue.size() >= 2) {
                             p1 = queue.remove(0);
                             p2 = queue.remove(0);
+
+                            if (p1.playerState != Player.State.QUEUED || p2.playerState != Player.State.QUEUED){
+                                continue;
+                            }
                         }
+
+                        p1.playerState = Player.State.IN_GAME;
+                        p2.playerState = Player.State.IN_GAME;
                     }
 
                     if (p1 == null || p2 == null) {
@@ -88,6 +95,7 @@ public class RPSserver {
 
         public void reset() {
             playerState = State.IDLE;
+
             synchronized (queue) {
                 queue.remove(this);
             }
@@ -160,7 +168,7 @@ public class RPSserver {
         private void publicMatch() throws Exception {
             synchronized (queue) {
                 if (playerState != State.IDLE) {
-                    return;
+                    playerState = State.IDLE;
                 }
                 playerState = State.QUEUED;
                 queue.add(this);
@@ -257,13 +265,16 @@ public class RPSserver {
                     String r2 = p2.incoming.readLine();
 
                     if (r1 == null || r2 == null) {
-                        p1.send("Opponent Disconnected");
-                        p2.send("Opponent Disconnected");
+                        p1.reset();
+                        p2.reset();
                         return;
                     }
                     if (r1.equals("no") || r2.equals("no")) {
                         p1.send("RETURN_TO_LOBBY");
                         p2.send("RETURN_TO_LOBBY");
+
+                        p1.playerState = Player.State.IDLE;
+                        p2.playerState = Player.State.IDLE;
 
                         p1.reset();
                         p2.reset();
