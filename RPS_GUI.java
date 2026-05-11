@@ -12,7 +12,6 @@ public class RPS_GUI {
     private PrintWriter out;
     private JLabel resultLabel;
     private String username;
-    private JPanel passwordPanel;
     private JTextField passwordField;
     private int pendingAction;
 
@@ -122,6 +121,7 @@ public class RPS_GUI {
 
         publicBtn.addActionListener(e -> {
             out.println("1");
+            cards.show(mainPanel, "waiting");
         });
 
         createBtn.addActionListener(e -> {
@@ -130,9 +130,7 @@ public class RPS_GUI {
         });
 
         joinBtn.addActionListener(e -> {
-
             pendingAction = 3;
-
             cards.show(mainPanel, "password");
         });
 
@@ -194,15 +192,6 @@ public class RPS_GUI {
         JButton paper = new JButton(paperIcon);
         JButton scissors = new JButton(ScissorsIcon);
 
-        rock.setHorizontalTextPosition(SwingConstants.CENTER);
-        rock.setVerticalTextPosition(SwingConstants.BOTTOM);
-
-        paper.setHorizontalTextPosition(SwingConstants.CENTER);
-        paper.setVerticalTextPosition(SwingConstants.BOTTOM);
-
-        scissors.setHorizontalTextPosition(SwingConstants.CENTER);
-        scissors.setVerticalTextPosition(SwingConstants.BOTTOM);
-
         rock.setFocusPainted(false);
         paper.setFocusPainted(false);
         scissors.setFocusPainted(false);
@@ -252,14 +241,14 @@ public class RPS_GUI {
 
     private JPanel waitingMovePanel() {
 
-        JPanel waitMovepanel = new JPanel(new BorderLayout());
-
+        JPanel panel = new JPanel(new BorderLayout());
         JLabel label = new JLabel("Waiting for opponents move", SwingConstants.CENTER);
-        label.setFont(new Font("Roboto", Font.BOLD, 24));
 
-        waitMovepanel.add(label, BorderLayout.CENTER);
+        label.setFont(new Font("Arial", Font.BOLD, 24));
 
-        return waitMovepanel;
+        panel.add(label, BorderLayout.CENTER);
+
+        return panel;
     }
 
     private JPanel resultPanel() {
@@ -285,12 +274,11 @@ public class RPS_GUI {
 
         yes.addActionListener(e -> {
             out.println("yes");
-            resultLabel.setText("Waiting for opponent");
+            cards.show(mainPanel, "waiting");
         });
 
         no.addActionListener(e -> {
             out.println("no");
-            resultLabel.setText("");
             cards.show(mainPanel, "menu");
         });
 
@@ -320,8 +308,6 @@ public class RPS_GUI {
     }
 
     private void handleMessage(String msg) {
-
-        System.out.println("SERVER: " + msg);
         if (msg.contains("Matched with")) {
             cards.show(mainPanel, "game");
         }
@@ -341,27 +327,23 @@ public class RPS_GUI {
         }
 
         if (msg.equals("RETURN_TO_LOBBY")) {
-            SwingUtilities.invokeLater(() -> {
-                resultLabel.setText("");
-                cards.show(mainPanel, "menu");
-                frame.revalidate();
-                frame.repaint();
-            });
+            resultLabel.setText("");
+            cards.show(mainPanel, "menu");
         }
 
         if (msg.contains("Username is already being used")) {
-            JOptionPane.showMessageDialog(frame, "Username is already being used");
+            JOptionPane.showMessageDialog(frame, "Username already taken.");
             cards.show(mainPanel, "login");
         }
 
         if (msg.contains("Username must")) {
 
-            JOptionPane.showMessageDialog(frame, "Username can only have 10 characters");
+            JOptionPane.showMessageDialog(frame, "Username max 10 characters.");
             cards.show(mainPanel, "login");
         }
 
         if (msg.contains("Username can only")) {
-            JOptionPane.showMessageDialog(frame, "Username can only have letters and numbers allowed");
+            JOptionPane.showMessageDialog(frame, "Only letters and numbers allowed.");
             cards.show(mainPanel, "login");
         }
 
@@ -378,16 +360,6 @@ public class RPS_GUI {
         if (msg.contains("Opponent Disconnected")) {
             resultLabel.setText("Opponent Disconnected");
             cards.show(mainPanel, "result");
-        }
-
-        if (msg.equals("START_GAME")) {
-            cards.show(mainPanel, "game");
-        }
-
-        if (msg.equals("Waiting for opponent")) {
-            SwingUtilities.invokeLater(() -> {
-                cards.show(mainPanel, "waiting");
-            });
         }
     }
 }
