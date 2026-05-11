@@ -227,7 +227,7 @@ public class RPSserver {
                         p1.send("Opponent Disconnected");
                         p2.send("Opponent Disconnected");
                         wakePlayer();
-                        break;
+                        return;
                     }
                     if (r1.equals("no") || r2.equals("no")){
                         p1.send("RETURN_TO_LOBBY");
