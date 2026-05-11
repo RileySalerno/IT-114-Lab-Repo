@@ -4,9 +4,9 @@ import java.io.*;
 
 public class RPSserver {
 
-    private static List<Player> queue = new ArrayList<>();
-    private static Map<String, Player> privateRoom = new HashMap<>();
-    private static List<String> activePlayers = new ArrayList<>();
+    private static final List<Player> queue = new ArrayList<>();
+    private static final Map<String, Player> privateRoom = new HashMap<>();
+    private static final List<String> activePlayers = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
 
@@ -23,21 +23,15 @@ public class RPSserver {
                         if (queue.size() >= 2) {
                             p1 = queue.remove(0);
                             p2 = queue.remove(0);
-
-                            if (p1.playerState != Player.State.QUEUED || p2.playerState != Player.State.QUEUED){
-                                continue;
-                            }
                         }
-
-                        p1.playerState = Player.State.IN_GAME;
-                        p2.playerState = Player.State.IN_GAME;
                     }
 
                     if (p1 == null || p2 == null) {
                         continue;
                     }
 
-                    if (p1.playerState != Player.State.QUEUED || p2.playerState != Player.State.QUEUED) {
+                    if (p1.playerState != Player.State.QUEUED ||
+                        p2.playerState != Player.State.QUEUED) {
                         continue;
                     }
 
@@ -49,7 +43,7 @@ public class RPSserver {
 
                     new Thread(() -> {
                         try {
-                            new Player.GameSession(finalP1, finalP2).gameStart();
+                            new GameSession(finalP1, finalP2).gameStart();
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -63,6 +57,7 @@ public class RPSserver {
             }
         }).start();
 
+        // CLIENT ACCEPT LOOP
         while (true) {
             Socket socket = serverSocket.accept();
             Player player = new Player(socket);
@@ -93,17 +88,22 @@ public class RPSserver {
             return name;
         }
 
-        public void reset() {
-            playerState = State.IDLE;
+        public void send(String msg) {
+            if (outgoing != null) {
+                outgoing.println(msg);
+            }
+        }
 
+        public void reset() {
             synchronized (queue) {
                 queue.remove(this);
             }
+            playerState = State.IDLE;
         }
 
         public void run() {
             try {
-
+                // username setup
                 while (true) {
                     send("Enter username:");
                     String enteredName = incoming.readLine();
@@ -139,37 +139,24 @@ public class RPSserver {
                 send("Welcome " + name);
 
                 String mode = incoming.readLine();
-
-                if (mode == null)
-                    return;
+                if (mode == null) return;
 
                 int type = Integer.parseInt(mode);
 
-                if (type == 1)
-                    publicMatch();
-                if (type == 2)
-                    createPR();
-                if (type == 3)
-                    joinPR();
+                if (type == 1) publicMatch();
+                if (type == 2) createPR();
+                if (type == 3) joinPR();
 
             } catch (Exception e) {
                 System.out.println("Client disconnected");
             } finally {
-                if (name != null) {
-                    activePlayers.remove(name);
-                }
+                if (name != null) activePlayers.remove(name);
             }
         }
 
-        public void send(String msg) {
-            outgoing.println(msg);
-        }
-
-        private void publicMatch() throws Exception {
+        private void publicMatch() {
             synchronized (queue) {
-                if (playerState != State.IDLE) {
-                    playerState = State.IDLE;
-                }
+                queue.remove(this); 
                 playerState = State.QUEUED;
                 queue.add(this);
                 send("Waiting for opponent");
@@ -197,10 +184,12 @@ public class RPSserver {
             synchronized (privateRoom) {
                 host = privateRoom.remove(password);
             }
+
             if (host == null) {
-                send("Room dosen't exist");
+                send("Room doesn't exist");
                 return;
             }
+
             send("Joined private room");
 
             new Thread(() -> {
@@ -215,72 +204,76 @@ public class RPSserver {
         public int getMove() throws Exception {
             while (true) {
                 String input = incoming.readLine();
+
+                if (input == null) {
+                    throw new IOException("Disconnected");
+                }
+
                 try {
                     int move = Integer.parseInt(input);
                     if (move >= 1 && move <= 3) {
                         return move;
                     }
-                } catch (Exception e) {
-
-                }
+                } catch (Exception ignored) {}
             }
         }
+    }
 
-        static class GameSession {
-            Player p1, p2;
+    static class GameSession {
 
-            GameSession(Player p1, Player p2) {
-                this.p1 = p1;
-                this.p2 = p2;
-            }
+        Player p1, p2;
 
-            void gameStart() throws Exception {
-                while (true) {
+        GameSession(Player p1, Player p2) {
+            this.p1 = p1;
+            this.p2 = p2;
+        }
 
-                    p1.send("START_GAME");
-                    p2.send("START_GAME");
+        private void endGame(){
+            p1.reset();
+            p2.reset();
+        }
 
-                    p1.send("Matched with " + p2.getName());
-                    p2.send("Matched with " + p1.getName());
+        void gameStart() throws Exception {
 
-                    int m1 = p1.getMove();
-                    int m2 = p2.getMove();
+            while (true) {
 
-                    String result;
+                p1.send("START_GAME");
+                p2.send("START_GAME");
 
-                    if (m1 == m2) {
-                        result = "Tie";
-                    } else if ((m1 == 1 && m2 == 3) || (m1 == 2 && m2 == 1) || (m1 == 3 && m2 == 2)) {
-                        RPSLeaderboard.addWins(p1.getName());
-                        result = p1.getName() + " wins";
-                    } else {
-                        RPSLeaderboard.addWins(p2.getName());
-                        result = p2.getName() + " wins";
-                    }
+                p1.send("Matched with " + p2.getName());
+                p2.send("Matched with " + p1.getName());
 
-                    p1.send(result);
-                    p2.send(result);
+                int m1 = p1.getMove();
+                int m2 = p2.getMove();
 
-                    String r1 = p1.incoming.readLine();
-                    String r2 = p2.incoming.readLine();
+                String result;
 
-                    if (r1 == null || r2 == null) {
-                        p1.reset();
-                        p2.reset();
-                        return;
-                    }
-                    if (r1.equals("no") || r2.equals("no")) {
-                        p1.send("RETURN_TO_LOBBY");
-                        p2.send("RETURN_TO_LOBBY");
+                if (m1 == m2) {
+                    result = "Tie";
+                } else if ((m1 == 1 && m2 == 3) ||
+                           (m1 == 2 && m2 == 1) ||
+                           (m1 == 3 && m2 == 2)) {
+                    result = p1.getName() + " wins";
+                } else {
+                    result = p2.getName() + " wins";
+                }
 
-                        p1.playerState = Player.State.IDLE;
-                        p2.playerState = Player.State.IDLE;
+                p1.send(result);
+                p2.send(result);
 
-                        p1.reset();
-                        p2.reset();
-                        return;
+                String r1 = p1.incoming.readLine();
+                String r2 = p2.incoming.readLine();
 
-                    }
+                if (r1 == null || r2 == null) {
+                    endGame();
+                    return;
+                }
+
+                if (r1.equals("no") || r2.equals("no")) {
+                    p1.send("RETURN_TO_LOBBY");
+                    p2.send("RETURN_TO_LOBBY");
+                    endGame();
+                    return;
                 }
             }
         }
