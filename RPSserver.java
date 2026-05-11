@@ -26,20 +26,30 @@ public class RPSserver {
                         }
                     }
 
-                    if (p1 != null && p2 != null) {
-                        Player finalP1 = p1;
-                        Player finalP2 = p2;
-
-                        new Thread(() -> {
-                            try {
-                                new Player.GameSession(finalP1, finalP2).gameStart();
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }).start();
+                    if (p1 == null || p2 == null) {
+                        continue;
                     }
 
+                    if (p1.playerState != Player.State.QUEUED || p2.playerState != Player.State.QUEUED) {
+                        continue;
+                    }
+
+                    p1.playerState = Player.State.IN_GAME;
+                    p2.playerState = Player.State.IN_GAME;
+
+                    Player finalP1 = p1;
+                    Player finalP2 = p2;
+
+                    new Thread(() -> {
+                        try {
+                            new Player.GameSession(finalP1, finalP2).gameStart();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+
                     Thread.sleep(100);
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -59,6 +69,14 @@ public class RPSserver {
         private PrintWriter outgoing;
         private String name;
 
+        enum State {
+            IDLE,
+            QUEUED,
+            IN_GAME
+        }
+
+        State playerState = State.IDLE;
+
         public Player(Socket socket) throws Exception {
             incoming = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             outgoing = new PrintWriter(socket.getOutputStream(), true);
@@ -66,6 +84,13 @@ public class RPSserver {
 
         public String getName() {
             return name;
+        }
+
+        public void reset() {
+            playerState = State.IDLE;
+            synchronized (queue) {
+                queue.remove(this);
+            }
         }
 
         public void run() {
@@ -102,19 +127,22 @@ public class RPSserver {
                         break;
                     }
                 }
-                
 
                 send("Welcome " + name);
 
                 String mode = incoming.readLine();
 
-                if (mode == null) return;
+                if (mode == null)
+                    return;
 
                 int type = Integer.parseInt(mode);
 
-                if (type == 1) publicMatch();
-                if (type == 2) createPR();
-                if (type == 3) joinPR();
+                if (type == 1)
+                    publicMatch();
+                if (type == 2)
+                    createPR();
+                if (type == 3)
+                    joinPR();
 
             } catch (Exception e) {
                 System.out.println("Client disconnected");
@@ -129,10 +157,14 @@ public class RPSserver {
             outgoing.println(msg);
         }
 
-        private void publicMatch() {
+        private void publicMatch() throws Exception {
             synchronized (queue) {
+                if (playerState != State.IDLE) {
+                    return;
+                }
+                playerState = State.QUEUED;
                 queue.add(this);
-                send("Waiting for opponent...");
+                send("Waiting for opponent");
             }
         }
 
@@ -148,10 +180,6 @@ public class RPSserver {
                 privateRoom.put(password, this);
                 send("Private room created");
             }
-
-            synchronized(this){
-                wait();
-            }
         }
 
         private void joinPR() throws Exception {
@@ -159,32 +187,34 @@ public class RPSserver {
             Player host;
 
             synchronized (privateRoom) {
-                    host = privateRoom.remove(password);
+                host = privateRoom.remove(password);
             }
-            if (host == null){
+            if (host == null) {
                 send("Room dosen't exist");
                 return;
             }
             send("Joined private room");
 
             new Thread(() -> {
-                try{
+                try {
                     new GameSession(host, this).gameStart();
-                }catch(Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }).start();
-
-            synchronized(this){
-                wait();
-            }
         }
 
         public int getMove() throws Exception {
             while (true) {
                 String input = incoming.readLine();
-                int move = Integer.parseInt(input);
-                if (move >= 1 && move <= 3) return move;
+                try {
+                    int move = Integer.parseInt(input);
+                    if (move >= 1 && move <= 3) {
+                        return move;
+                    }
+                } catch (Exception e) {
+
+                }
             }
         }
 
@@ -198,6 +228,9 @@ public class RPSserver {
 
             void gameStart() throws Exception {
                 while (true) {
+
+                    p1.send("START_GAME");
+                    p2.send("START_GAME");
 
                     p1.send("Matched with " + p2.getName());
                     p2.send("Matched with " + p1.getName());
@@ -223,29 +256,20 @@ public class RPSserver {
                     String r1 = p1.incoming.readLine();
                     String r2 = p2.incoming.readLine();
 
-                    if (r1 == null || r2 == null){
+                    if (r1 == null || r2 == null) {
                         p1.send("Opponent Disconnected");
                         p2.send("Opponent Disconnected");
-                        wakePlayer();
                         return;
                     }
-                    if (r1.equals("no") || r2.equals("no")){
+                    if (r1.equals("no") || r2.equals("no")) {
                         p1.send("RETURN_TO_LOBBY");
-                        p1.send("RETURN_TO_LOBBY");
-                        wakePlayer();
+                        p2.send("RETURN_TO_LOBBY");
+
+                        p1.reset();
+                        p2.reset();
                         return;
 
                     }
-                }
-            }
-
-            private void wakePlayer(){
-                synchronized(p1){
-                    p1.notify();
-                }
-
-                synchronized(p2){
-                    p2.notify();
                 }
             }
         }
