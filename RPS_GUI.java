@@ -1,11 +1,30 @@
 import javax.swing.*;
 import java.awt.*;
+import java.io.*;
+import java.net.Socket;
 
-public class RPS_GUI extends JFrame{
-    public static void main(String[] args) {
-        String username = JOptionPane.showInputDialog("Enter a username");
-        JOptionPane.showMessageDialog(null, "Hello " + username);
+public class RPS_GUI {
 
-        JPanel panel = new JPanel(new GridLayout(3, 2, 5, 5));
+    private JFrame frame;
+    private CardLayout cards;
+    private JPanel mainPanel;
+
+    private BufferedReader in;
+    private PrintWriter out;
+
+    private JLabel resultLabel;
+
+    private String username;
+
+    private JPanel passwordPanel;
+    private JTextField passwordField;
+    private int pendingAction;
+
+     private void setupConnection() throws Exception {
+        Socket socket = new Socket("localhost", 8080);
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        out = new PrintWriter(socket.getOutputStream(), true);
     }
+
+
 }
