@@ -64,5 +64,74 @@ public class RPS_GUI {
         cards.show(mainPanel, "login");
     }
 
+     private JPanel loginPanel() {
+
+        JPanel panel = new JPanel();
+
+        JLabel label = new JLabel("Username:");
+
+        JTextField nameField = new JTextField(15);
+
+        JButton connect = new JButton("Connect");
+
+        connect.setFont(new Font("Arial", Font.BOLD, 18));
+
+        connect.addActionListener(e -> {
+
+            username = nameField.getText();
+
+            out.println(username);
+
+            cards.show(mainPanel, "menu");
+        });
+
+        panel.add(label);
+        panel.add(nameField);
+        panel.add(connect);
+
+        return panel;
+    }
+
+    private JPanel menuPanel() {
+
+        JPanel panel = new JPanel();
+
+        JButton publicBtn = new JButton("Public Match");
+        JButton createBtn = new JButton("Create Private");
+        JButton joinBtn = new JButton("Join Private");
+
+        Font font = new Font("Arial", Font.BOLD, 20);
+
+        publicBtn.setFont(font);
+        createBtn.setFont(font);
+        joinBtn.setFont(font);
+
+        publicBtn.addActionListener(e -> {
+
+            out.println("1");
+
+            cards.show(mainPanel, "waiting");
+        });
+
+        createBtn.addActionListener(e -> {
+
+            pendingAction = 2;
+
+            cards.show(mainPanel, "password");
+        });
+
+        joinBtn.addActionListener(e -> {
+
+            pendingAction = 3;
+
+            cards.show(mainPanel, "password");
+        });
+
+        panel.add(publicBtn);
+        panel.add(createBtn);
+        panel.add(joinBtn);
+
+        return panel;
+    }
 
 }
