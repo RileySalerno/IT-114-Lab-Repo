@@ -107,8 +107,8 @@ public class RPS_GUI {
     private JPanel menuPanel() {
 
         JPanel menuPanel = new JPanel();
-        
-        menuPanel.setLayout(new GridLayout(3,1));
+
+        menuPanel.setLayout(new GridLayout(3, 1));
 
         JButton publicBtn = new JButton("Public Match");
         JButton createBtn = new JButton("Create Private Room");
@@ -121,16 +121,11 @@ public class RPS_GUI {
         joinBtn.setFont(font);
 
         publicBtn.addActionListener(e -> {
-
             out.println("1");
-
-            cards.show(mainPanel, "waiting");
         });
 
         createBtn.addActionListener(e -> {
-
             pendingAction = 2;
-
             cards.show(mainPanel, "password");
         });
 
@@ -164,7 +159,7 @@ public class RPS_GUI {
 
             String password = passwordField.getText();
 
-            if (!password.matches("\\d{1,10}")){
+            if (!password.matches("\\d{1,10}")) {
                 JOptionPane.showMessageDialog(frame, "Password can only be 10 or less numbers");
                 return;
             }
@@ -189,7 +184,6 @@ public class RPS_GUI {
 
         panel.setLayout(new GridLayout(1, 3, 10, 10));
 
-
         ImageIcon rockIcon = new ImageIcon(getClass().getResource("/Icons/rock.png"));
 
         ImageIcon paperIcon = new ImageIcon(getClass().getResource("/Icons/paper.png"));
@@ -208,7 +202,6 @@ public class RPS_GUI {
 
         scissors.setHorizontalTextPosition(SwingConstants.CENTER);
         scissors.setVerticalTextPosition(SwingConstants.BOTTOM);
-
 
         rock.setFocusPainted(false);
         paper.setFocusPainted(false);
@@ -273,7 +266,7 @@ public class RPS_GUI {
 
         JPanel panel = new JPanel(new BorderLayout());
 
-        resultLabel = new JLabel("",SwingConstants.CENTER);
+        resultLabel = new JLabel("", SwingConstants.CENTER);
 
         resultLabel.setFont(new Font("Roboto", Font.BOLD, 34));
         JLabel bottomText = new JLabel("Play again?", SwingConstants.CENTER);
@@ -348,28 +341,27 @@ public class RPS_GUI {
         }
 
         if (msg.equals("RETURN_TO_LOBBY")) {
-            SwingUtilities.invokeLater(() ->{ 
+            SwingUtilities.invokeLater(() -> {
                 resultLabel.setText("");
                 cards.show(mainPanel, "menu");
-
                 frame.revalidate();
                 frame.repaint();
-        });
+            });
         }
 
         if (msg.contains("Username is already being used")) {
-            JOptionPane.showMessageDialog(frame, "Username already taken.");
+            JOptionPane.showMessageDialog(frame, "Username is already being used");
             cards.show(mainPanel, "login");
         }
 
         if (msg.contains("Username must")) {
 
-            JOptionPane.showMessageDialog(frame, "Username max 10 characters.");
+            JOptionPane.showMessageDialog(frame, "Username can only have 10 characters");
             cards.show(mainPanel, "login");
         }
 
         if (msg.contains("Username can only")) {
-            JOptionPane.showMessageDialog(frame,"Only letters and numbers allowed.");
+            JOptionPane.showMessageDialog(frame, "Username can only have letters and numbers allowed");
             cards.show(mainPanel, "login");
         }
 
@@ -379,13 +371,23 @@ public class RPS_GUI {
         }
 
         if (msg.contains("Room doesn't exist")) {
-            JOptionPane.showMessageDialog(frame,"Room doesn't exist.");
+            JOptionPane.showMessageDialog(frame, "Room doesn't exist.");
             cards.show(mainPanel, "menu");
         }
 
         if (msg.contains("Opponent Disconnected")) {
             resultLabel.setText("Opponent Disconnected");
             cards.show(mainPanel, "result");
+        }
+
+        if (msg.equals("START_GAME")) {
+            cards.show(mainPanel, "game");
+        }
+
+        if (msg.equals("Waiting for opponent")) {
+            SwingUtilities.invokeLater(() -> {
+                cards.show(mainPanel, "waiting");
+            });
         }
     }
 }
