@@ -21,17 +21,23 @@ public class RPSserver {
 
                     synchronized (queue) {
                         if (queue.size() >= 2) {
-                            p1 = queue.remove(0);
-                            p2 = queue.remove(0);
+
+                            p1 = queue.get(0);
+                            p2 = queue.get(1);
+
+                            if (p1.playerState != Player.State.QUEUED || p2.playerState != Player.State.QUEUED) {
+
+                                queue.remove(p1);
+                                queue.remove(p2);
+                                continue;
+                            }
+
+                            queue.remove(p1);
+                            queue.remove(p2);
                         }
                     }
 
                     if (p1 == null || p2 == null) {
-                        continue;
-                    }
-
-                    if (p1.playerState != Player.State.QUEUED ||
-                        p2.playerState != Player.State.QUEUED) {
                         continue;
                     }
 
@@ -56,8 +62,6 @@ public class RPSserver {
                 }
             }
         }).start();
-
-        // CLIENT ACCEPT LOOP
         while (true) {
             Socket socket = serverSocket.accept();
             Player player = new Player(socket);
@@ -99,6 +103,14 @@ public class RPSserver {
                 queue.remove(this);
             }
             playerState = State.IDLE;
+
+            try {
+                if (incoming.ready()) {
+                    incoming.readLine();
+                }
+            } catch (Exception e) {
+
+            }
         }
 
         public void run() {
@@ -139,26 +151,35 @@ public class RPSserver {
                 send("Welcome " + name);
 
                 String mode = incoming.readLine();
-                if (mode == null) return;
+                if (mode == null)
+                    return;
 
                 int type = Integer.parseInt(mode);
 
-                if (type == 1) publicMatch();
-                if (type == 2) createPR();
-                if (type == 3) joinPR();
+                if (type == 1)
+                    publicMatch();
+                if (type == 2)
+                    createPR();
+                if (type == 3)
+                    joinPR();
 
             } catch (Exception e) {
                 System.out.println("Client disconnected");
             } finally {
-                if (name != null) activePlayers.remove(name);
+                if (name != null)
+                    activePlayers.remove(name);
             }
         }
 
         private void publicMatch() {
             synchronized (queue) {
-                queue.remove(this); 
+                queue.remove(this);
+                if (playerState == State.IN_GAME) {
+                    return;
+                }
                 playerState = State.QUEUED;
                 queue.add(this);
+                
                 send("Waiting for opponent");
             }
         }
@@ -214,7 +235,8 @@ public class RPSserver {
                     if (move >= 1 && move <= 3) {
                         return move;
                     }
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         }
     }
@@ -228,9 +250,13 @@ public class RPSserver {
             this.p2 = p2;
         }
 
-        private void endGame(){
-            p1.reset();
-            p2.reset();
+        private void endGame() {
+            if (p1 != null) {
+                p1.reset();
+            }
+            if (p2 != null) {
+                p2.reset();
+            }
         }
 
         void gameStart() throws Exception {
@@ -251,8 +277,8 @@ public class RPSserver {
                 if (m1 == m2) {
                     result = "Tie";
                 } else if ((m1 == 1 && m2 == 3) ||
-                           (m1 == 2 && m2 == 1) ||
-                           (m1 == 3 && m2 == 2)) {
+                        (m1 == 2 && m2 == 1) ||
+                        (m1 == 3 && m2 == 2)) {
                     result = p1.getName() + " wins";
                 } else {
                     result = p2.getName() + " wins";
