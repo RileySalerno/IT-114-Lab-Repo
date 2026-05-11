@@ -12,7 +12,38 @@ public class RPSserver {
         ServerSocket serverSocket = new ServerSocket(8080);
         System.out.println("Started Server");
 
-        while (true) {
+        new Thread(() -> {
+            while (true){
+                try{
+                    Player p1 = null;
+                    Player p2 = null;
+
+                    synchronized (queue) {
+                        if (queue.size() >= 2){
+                            p1 = queue.remove(0);
+                            p2 = queue.remove(0);
+                        }
+                    }
+
+                    if (p1 != null && p2 != null){
+                        final Player fp1 = p1;
+                        final Player fp2 = p2;
+                        new Thread(() -> {
+                            try {
+                                new Player.GameSession(fp1, fp2).gameStart();
+                            }catch(Exception e){
+                                System.out.println("Game Session error: " + e.getMessage());
+                            }
+                        }).start();
+                    }
+                    Thread.sleep(100);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+         while (true) {
             Socket listener = serverSocket.accept();
             Player player = new Player(listener);
             new Thread(player).start();
@@ -33,7 +64,7 @@ public class RPSserver {
             return name;
         }
 
-        public void run() {
+        public void run(){
             try {
                 System.out.println("Client has joined");
                 while (true) {
@@ -76,8 +107,17 @@ public class RPSserver {
 
                 send(name + " has joined the server");
                 send("Enter 1 for Public Match, 2 to Create Private Room, 3 to Join Private Room:");
-                int roomType = Integer.parseInt(incoming.readLine());
-
+                String input = incoming.readLine();
+                if (input == null) {
+                    return;
+                }
+                int roomType;
+                try{
+                    roomType = Integer.parseInt(input);
+                } catch (NumberFormatException e){
+                    send("You can only enter 1, 2, or 3");
+                    return;
+                }
                 if (roomType == 1) {
                     publicMatch();
                 } else if (roomType == 2) {
@@ -104,21 +144,18 @@ public class RPSserver {
         private void publicMatch() throws Exception {
             synchronized (queue) {
                 queue.add(this);
-
-                if (queue.size() >= 2) {
-                    Player p1 = queue.remove(0);
-                    Player p2 = queue.remove(0);
-
-                    new GameSession(p1, p2).gameStart();
-                } else {
-                    send("Waiting for another player to join");
-                }
+                send("Waiting for opponent");
             }
         }
 
         private void createPR() throws Exception {
             outgoing.println("Enter a Password using only numbers or letters");
             String roomPassword = incoming.readLine();
+
+            if (roomPassword == null || !roomPassword.matches("[0-9]+")){
+                send("Invalid password");
+                return;
+            }
 
             synchronized (privateRoom) {
                 privateRoom.put(roomPassword, this);
@@ -141,7 +178,23 @@ public class RPSserver {
         }
 
         public int getMove() throws Exception {
-            return Integer.parseInt(incoming.readLine());
+            while (true){
+                String input = incoming.readLine();
+                    if (input == null){
+                        throw new IOException("Client disconnected");
+                    }
+
+                try {
+                    int move = Integer.parseInt(input);
+                    if (move == 1 || move == 2 || move == 3){
+                        return move;
+                    }else{
+                        send("invalid input. Only enter 1, 2, or 3");
+                    }
+                } catch (NumberFormatException e){
+                    send("Invalid input, Enter 1, 2, or 3");
+                }
+            }
         }
 
         static class GameSession {
@@ -179,6 +232,12 @@ public class RPSserver {
 
                     String r1 = p1.incoming.readLine();
                     String r2 = p2.incoming.readLine();
+
+                    if (r1 == null || r2 == null) {
+                        p1.send("Opponent Disconnected");
+                        p2.send("Opponent Disconnected");
+                        break;
+                    }
 
                     if (r1.equalsIgnoreCase("no") || r2.equalsIgnoreCase("no")) {
                         p1.send("Exited Server");
