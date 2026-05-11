@@ -209,11 +209,11 @@ public class RPSserver {
 
                     if (m1 == m2) {
                         result = "Tie";
-                    } else if ((m1 == 1 && m2 == 3) ||
-                               (m1 == 2 && m2 == 1) ||
-                               (m1 == 3 && m2 == 2)) {
+                    } else if ((m1 == 1 && m2 == 3) || (m1 == 2 && m2 == 1) || (m1 == 3 && m2 == 2)) {
+                        RPSLeaderboard.addWins(p1.getName());
                         result = p1.getName() + " wins";
                     } else {
+                        RPSLeaderboard.addWins(p2.getName());
                         result = p2.getName() + " wins";
                     }
 
@@ -233,6 +233,7 @@ public class RPSserver {
                         p1.send("RETURN_TO_LOBBY");
                         p1.send("RETURN_TO_LOBBY");
                         wakePlayer();
+                        return;
 
                     }
                 }
