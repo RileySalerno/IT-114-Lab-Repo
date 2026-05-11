@@ -319,5 +319,118 @@ public class RPS_GUI {
 
         return panel;
     }
-    
+
+     private void startListenerThread() {
+
+        new Thread(() -> {
+
+            try {
+
+                String msg;
+
+                while ((msg = in.readLine()) != null) {
+
+                    final String message = msg;
+
+                    SwingUtilities.invokeLater(() -> handleMessage(message));
+                }
+
+            } catch (Exception e) {
+
+                e.printStackTrace();
+            }
+
+        }).start();
+    }
+
+    private void handleMessage(String msg) {
+
+        System.out.println("SERVER: " + msg);
+
+        if (msg.contains("Matched with")) {
+
+            cards.show(mainPanel, "game");
+        }
+
+        if (msg.contains("Tie")) {
+
+            resultLabel.setText("Tie");
+
+            cards.show(mainPanel, "result");
+        }
+
+        if (msg.contains("wins")) {
+
+            if (msg.startsWith(username + " wins")) {
+
+                resultLabel.setText("You Win");
+
+            } else {
+
+                resultLabel.setText("You Lose");
+            }
+
+            cards.show(mainPanel, "result");
+        }
+
+        if (msg.equals("RETURN_LOBBY")) {
+
+            resultLabel.setText("");
+
+            cards.show(mainPanel, "menu");
+        }
+
+        if (msg.contains("Username is already being used")) {
+
+            JOptionPane.showMessageDialog(
+                    frame,
+                    "Username already taken.");
+
+            cards.show(mainPanel, "login");
+        }
+
+        if (msg.contains("Username must")) {
+
+            JOptionPane.showMessageDialog(
+                    frame,
+                    "Username max 10 characters.");
+
+            cards.show(mainPanel, "login");
+        }
+
+        if (msg.contains("Username can only")) {
+
+            JOptionPane.showMessageDialog(
+                    frame,
+                    "Only letters and numbers allowed.");
+
+            cards.show(mainPanel, "login");
+        }
+
+        if (msg.contains("Invalid password")) {
+
+            JOptionPane.showMessageDialog(
+                    frame,
+                    "Invalid password.");
+
+            cards.show(mainPanel, "menu");
+        }
+
+        if (msg.contains("Room doesn't exist")) {
+
+            JOptionPane.showMessageDialog(
+                    frame,
+                    "Room doesn't exist.");
+
+            cards.show(mainPanel, "menu");
+        }
+
+        if (msg.contains("Opponent Disconnected")) {
+
+            resultLabel.setText("Opponent Disconnected");
+
+            cards.show(mainPanel, "result");
+        }
+    }
+}
 }
